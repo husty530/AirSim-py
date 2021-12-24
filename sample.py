@@ -1,5 +1,5 @@
 from pynput import keyboard as kb
-import time, math, airsim
+import time, math, threading, airsim
 
 class VirtualVehicle:
 
@@ -56,7 +56,21 @@ class VirtualVehicle:
 if __name__ == '__main__':
 
     vehicle = VirtualVehicle()
-    kb.Listener(on_press=lambda key: vehicle.operate(key)).start()
-    while vehicle.isOpened:
-        print(vehicle.getState())
-        time.sleep(0.2)
+    lock = threading.Lock()
+
+    def receivingLoop():
+        while vehicle.isOpened:
+            with lock:
+                print(vehicle.getState())
+                time.sleep(0.1)
+    
+    def on_press(key):
+        with lock:
+            vehicle.operate(key)
+    
+    th1 = threading.Thread(target=receivingLoop)
+    th2 = kb.Listener(on_press=on_press)
+    th1.start()
+    th2.start()
+    th1.join()
+    th2.join()
