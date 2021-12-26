@@ -1,3 +1,4 @@
+from airsim.types import CarControls, GeoPoint, Vector3r
 from pynput import keyboard as kb
 import time, math, threading, airsim
 
@@ -8,13 +9,13 @@ class VirtualVehicle:
         self.car = airsim.CarClient()
         self.car.confirmConnection()
         self.car.enableApiControl(True, 'Car')
-        self.operation = self.car.getCarControls('Car')
+        self.operation: CarControls = self.car.getCarControls('Car')
         self.operation.is_manual_gear = True
-        self.throttle = 0
-        self.isOpened = True
+        self.throttle: float = 0
+        self.isOpened: bool = True
 
     # キー入力で操作するやつ
-    def operate(self, key):
+    def operate(self, key: kb.Key):
 
         if key is kb.Key.esc:
             self.throttle = 0
@@ -39,9 +40,9 @@ class VirtualVehicle:
     # 車載センサの情報をくれるやつ
     def getState(self):
 
-        speed = self.car.getCarState('Car').speed
-        imu = self.car.getImuData('Imu', 'Car').angular_velocity
-        gps = self.car.getGpsData('Gps', 'Car').gnss.geo_point
+        speed: float = self.car.getCarState('Car').speed
+        imu: Vector3r = self.car.getImuData('Imu', 'Car').angular_velocity
+        gps: GeoPoint = self.car.getGpsData('Gps', 'Car').gnss.geo_point
         self.car.setCarControls(self.operation, 'Car')
         return {
             'speed': speed, 
@@ -69,7 +70,7 @@ if __name__ == '__main__':
             vehicle.operate(key)
     
     th1 = threading.Thread(target=receivingLoop)
-    th2 = kb.Listener(on_press=on_press)
+    th2: threading.Thread = kb.Listener(on_press=on_press)
     th1.start()
     th2.start()
     th1.join()
