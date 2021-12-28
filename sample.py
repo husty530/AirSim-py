@@ -1,4 +1,4 @@
-from airsim.types import CarControls, GeoPoint, Vector3r
+from airsim.types import CarControls, GeoPoint, ImuData
 from pynput import keyboard as kb
 import time, math, threading, airsim
 
@@ -41,16 +41,17 @@ class VirtualVehicle:
     def getState(self):
 
         speed: float = self.car.getCarState('Car').speed
-        imu: Vector3r = self.car.getImuData('Imu', 'Car').angular_velocity
+        imu: ImuData = self.car.getImuData('Imu', 'Car')
+        posture: tuple[float, float, float] = airsim.utils.to_eularian_angles(imu.orientation)
         gps: GeoPoint = self.car.getGpsData('Gps', 'Car').gnss.geo_point
         self.car.setCarControls(self.operation, 'Car')
         return {
             'speed': speed, 
             'latitude': gps.latitude, 
             'longitude': gps.longitude, 
-            'gyro_x': imu.x_val, 
-            'gyro_y': imu.y_val, 
-            'gyro_z': imu.z_val
+            'pitch': posture[0], 
+            'roll': posture[1], 
+            'yaw': posture[2]
             }
 
 
